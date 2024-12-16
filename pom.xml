@@ -28,6 +28,11 @@
 				<version>1.18.28</version> <!-- 使用合适的版本 -->
 				<scope>provided</scope>
 			</dependency>
+			<dependency>
+				<groupId>com.alibaba</groupId>
+				<artifactId>fastjson</artifactId>
+				<version>1.2.78</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 </project>
