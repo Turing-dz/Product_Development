@@ -40,29 +40,53 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 （4）代码git到本地仓库和远程仓库(首先删除掉子module里面的.git文件夹，我们只用父.git管理代码)
-    #本地
-    git init(初始化一个新的 Git 仓库)
-    git add .(当前目录下的所有文件添加到 Git 暂存区)
-    git commit -m "初始化项目或其他提交描述" (将暂存区的文件提交到本地仓库，并附上提交信息)
-    git status(查看提交状态)
-    git log(查看提交历史)
-    git branch(查看当前分支)
-    git checkout -b new-branch(切换到新分支)
-    #一般远程主分支是ain，但本地一般是master，所以这里把master名字先修改成main
-    git checkout master（确保当前位于 master 分支）
-    git branch -m main （将 master 分支重命名为 main）
-    #远程
-    #目前github使用 HTTPS 进行身份验证时，需要使用 Personal Access Token (PAT)认证，具体可以参考博文https://blog.csdn.net/weixin_56176015/article/details/129833353
-    远程仓库的默认名称一般是 origin（git remote -v 查看远程仓库名称）
-    git remote set-url 你的remote别名 https://你的token@你的仓库地址（将本地仓库与远程 GitHub 仓库关联起来）
-    示例：git remote set-url origin https://github_pat_55JVU10fmK2@github.com/Turing-dz/Product_Development.git
-    git push -u origin main/master（本地的 main 分支（或 master 分支）推送到远程仓库）
-    后续代码修改后使用如下更新仓库
-    git add .
-    git commit -m "修改说明"
-    git push
+        #本地
+        git init(初始化一个新的 Git 仓库)
+        git add .(当前目录下的所有文件添加到 Git 暂存区)
+        git commit -m "初始化项目或其他提交描述" (将暂存区的文件提交到本地仓库，并附上提交信息)
+        git status(查看提交状态)
+        git log(查看提交历史)
+        git branch(查看当前分支)
+        git checkout -b new-branch(切换到新分支)
+        #一般远程主分支是ain，但本地一般是master，所以这里把master名字先修改成main
+        git checkout master（确保当前位于 master 分支）
+        git branch -m main （将 master 分支重命名为 main）
+        #远程
+        点击头像，settings，developer settings，personal access tokens，Tokens（classic），generate（仓库权限选择repo就可以）
+        远程仓库的默认名称一般是 origin（git remote -v 查看远程仓库名称）
+        git remote set-url 你的remote别名 https://你的token@你的仓库地址（将本地仓库与远程 GitHub 仓库关联起来）
+        示例：git remote set-url origin https://ghp_ieS79@github.com/Turing-dz/Product_Development.git
+        git push -u origin main/master（本地的 main 分支（或 master 分支）推送到远程仓库）
+        后续代码修改后使用如下更新仓库
+        git add .
+        git commit -m "修改说明"
+        git push
+（5）使用idea自带的HTTP Client测试接口
+    首先在business\src\main\java\com\hckj\business\controller\TestController.java里面写测试接口类
+    @RestController注解(类注解@Controller 和 方法注解@ResponseBody 的组合，使标注类可以处理 HTTP 请求，并将返回结果直接写入 HTTP 响应体中)
+        @Controller：表示该类是一个控制器类，用于处理请求并返回视图。
+        @ResponseBody：表示方法返回的结果应该直接写入 HTTP 响应体，创建 RESTful API 服务，通常返回 JSON 或 XML 格式的数据，而不是视图(使用 @RestController 可以省略在每个方法上使用 @ResponseBody 注解的需要，从而简化开发。)
+    然后在nls\http\test.http（以.http结尾）里面写测试,输入g，选择gtr（不带参数请求）生成代码模板，然后根据接口路径修改。
+    最后进行测试，启动Application后端，区测试文件里点击三角运行符。
+    #配置,获取并日志打印程序运行的环境变量
+    在application.properties里面配置（server.port=18000服务启动端口，server.servlet.context-path=/nls服务访问路径前缀）
+    在application类里面的启动方法里面通过.getEnvironment()方法环境对象（生成变量使用ctrl+alt+v），然后打印环境信息
+    private static final Logger log = LoggerFactory.getLogger(BusinessApplication.class);
+        public static void main(String[] args) {
+            ConfigurableEnvironment environment = SpringApplication.run(BusinessApplication.class, args).getEnvironment();
+            log.info("测试地址 http://localhost:{}{}/hello",environment.getProperty("server.port"),environment.getProperty("server.servlet.context-path"));
+        }
+（6）使用AOP打印并保存网络请求参数和返回数据的log
+    首先在子pom里面添加dependency
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+    然后在business\src\main\java\com\hckj\business\aspect\LogAspect.java类(添加@Aspect和@Component注解)里面写切面方法
+        首先要定义切点（使用@Pointcut方法注解）
+        然后定义前置通知@Before("切点方法名（）")，后置通知@After和环绕通知@Around
 
-（5）
+
 
 
 
