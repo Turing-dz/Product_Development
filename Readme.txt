@@ -155,6 +155,24 @@
                 log.info("----------------- 环绕通知结束 耗时：{} ms -----------------", System.currentTimeMillis() - startTime);
                 return result;
             };
+（7）项目初始化配置
+    1.项目编码都用utf-8（settings，搜索encoding，然后能改的都改成utf-8）
+    2.包的自动导入和自动删除（settings，搜索auto import，勾选java里面的Add unambiguous imports on the fly和Optimize imports on the fly）
+    3.热部署用到devtools依赖，记得在pom里面加入devtools（settings里面勾选Advanced Settings > auto-make和Build, Execution, Deployment > Compiler > Build project automaticly）
+    4.（代码可复用）输出日志文件，在business\src\main\resources\logback-spring.xml里面修改日志文件存储路径和自定义输出格式。
+    父pom
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.4.14</version>
+    </dependency>
+    子pom
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+    </dependency>
+    logback-spring.xml文件
+（8）
 
 
 
