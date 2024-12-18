@@ -1,14 +1,18 @@
 package com.hckj.business.aspect;
 
+import cn.hutool.core.util.IdUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.support.spring.PropertyPreFilters;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -40,6 +44,8 @@ public class LogAspect {
 //    }
     @Around("pointe()")
     public Object doAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+//        MDC.put( "LOG_ID", String.valueOf(System.currentTimeMillis()));
+        MDC.put( "LOG_ID", IdUtil.getSnowflakeNextIdStr());
         log.info("----------------- 环绕通知开始  -----------------");
         long startTime = System.currentTimeMillis();
         // 开始打印请求日志

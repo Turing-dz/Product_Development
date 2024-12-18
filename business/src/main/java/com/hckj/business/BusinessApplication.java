@@ -1,12 +1,14 @@
 package com.hckj.business;
 
+
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.ConfigurableEnvironment;
-
 @SpringBootApplication
+@MapperScan("com.hckj.business.mapper")
 public class BusinessApplication {
     // 将 log 变为静态
     private static final Logger log = LoggerFactory.getLogger(BusinessApplication.class);
