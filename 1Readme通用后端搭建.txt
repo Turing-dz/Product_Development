@@ -172,8 +172,154 @@
         <artifactId>logback-classic</artifactId>
     </dependency>
     logback-spring.xml文件
-（8）
+（8）idea链接本地MySQL
+（9）使用mybatis让代码链接数据库
+    首先父子pom添加依赖
+        <!-- 集成mybatis -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>3.0.4</version>
+        </dependency>
+        <!-- 集成mysql连接 -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.28</version>
+        </dependency>
+    然后application.properties里面配置数据库
+        # 数据库连接
+        spring.datasource.url=jdbc:mysql://localhost:3306/nls?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+        spring.datasource.username=root
+        spring.datasource.password=190023
+        spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+        # mybatis xml路径
+        mybatis.mapper-locations=classpath:mapper/*.xml
+        #打印sql语句
+        logging.level.com.hckj.business.mapper=trace
+    再然后写mapper接口(不用@Mapper注解)和xml
+    最后给启动类添加注解@MapperScan("com.hckj.business.mapper")扫描指定包路径下的 MyBatis 的 Mapper 接口
+（10）mybatis代码生成器的使用（mybaties generatoer，快速生成表单的增删改查）
+    父目录下new module，Maven Archetype，Name（generator），Archetype（quickstart）
+    然后generator子pom配置 MyBatis Generator 插件，用于自动生成数据库访问层的代码
+        <build>
+            <plugins>
+                <!-- mybatis generator 自动生成代码插件 -->
+                <plugin>
+                    <groupId>org.mybatis.generator</groupId>
+                    <artifactId>mybatis-generator-maven-plugin</artifactId>
+                    <version>1.4.0</version>
+                    <configuration>
+                        <!-- 如果有多个模块，可以在这里写多个configurationFile，不需要生成的注释掉 -->
+                        <!--<configurationFile>src/main/resources/generator-config-batch.xml</configurationFile>-->
+                        <configurationFile>src/main/resources/generator-config-business.xml</configurationFile>
+                        <overwrite>true</overwrite>
+                        <verbose>true</verbose>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>mysql</groupId>
+                            <artifactId>mysql-connector-java</artifactId>
+                            <version>8.0.22</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </build>
+    在然后generator\src\main\resources\generator-config-business.xml里面配置插件代码生成的规则，生成的位置以及数据库和表信息
+    双击右边maven，generator，mybatis-generator,generator生成(配置快捷命令---图片)
+(11)封装请求参数和返回结果
+    父子pom加hutool依赖
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.10</version>
+        </dependency>
+    创建req和resp实体类，进行封装,然后使用generator生成的代码处理逻辑
+（12）异常处理
+    系统异常增加统一拦截器处理
+        在\controller\ControllerExceptionHandler.java里面写异常处理
+        @Slf4j//打印日志
+        @ControllerAdvice//针对controller的统一处理
+        public class ControllerExceptionHandler {
 
+            /**
+             * 所有异常统一处理
+             * @param e
+             * @return
+             */
+            @ExceptionHandler(value = Exception.class)
+            @ResponseBody//返回json数据
+            public CommonResp<Object> exceptionHandler(Exception e) throws Exception {
+                CommonResp<Object> commonResp = new CommonResp<>();
+                log.error("系统异常：", e);
+                commonResp.setSuccess(false);
+                commonResp.setMessage("系统出现异常，请联系管理员");
+                return commonResp;
+            }
+        }
+    业务异常增加统一拦截器处理
+        首先在business\exception\BusinessException.java里面构造业务异常函数
+        @Data
+        @AllArgsConstructor
+        public class BusinessException extends RuntimeException {
+            private String desc;
+            /**
+             * 不写入堆栈信息，简化异常日志，提高性能
+             */
+            @Override
+            public Throwable fillInStackTrace() {
+                return this;
+            }
+        }
+        然后在hckj\business\controller\ControllerExceptionHandler.java里面拦截business业务异常，统一用ResponseBody返回
+        @ExceptionHandler(value = BusinessException.class)
+        @ResponseBody//返回json数据
+        public CommonResp<Object> exceptionHandler(BusinessException e) {
+            CommonResp<Object> commonResp = new CommonResp<>();
+            log.error("business业务异常：", e);
+            commonResp.setSuccess(false);
+            commonResp.setMessage(e.getDesc());
+            return commonResp;
+        }
+        再然后在business\exception\BusinessExceptionEnum.java里面定义business业务枚举类
+        @AllArgsConstructor
+        public enum BusinessExceptionEnum {
+            DEMO_MOBILE_NOT_NULL( "手机号不能为空！");
+            @Getter
+            private final String desc;
+        }
+        最后在service里面调用自定义的业务异常
+        throw new BusinessException(BusinessExceptionEnum.DEMO_MOBILE_NOT_NULL.getDesc());
+（13）集成校验框架validation（spring-boot自带）
+    首先在子pom中添加依赖
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    然后在请求实体类里面对此属性值添加规则注解
+    @NotBlank(message = "【手机号】不能为空")
+    private String mobile;
+    再然后在controller里面接收参数时添加@Valid注解，打开校验规则。query(@Valid DemoQueryReq demoQueryReq)
+    此时校验可以触发，但校验不通过就会抛出一个MethodArgumentNotValidException异常，所以需要在controller\ControllerExceptionHandler.java里面统一拦截这个具体异常并处理
+    /**
+     * 校验异常统一处理
+     * @param e
+     * @return
+     */
+    @ExceptionHandler(value = BindException.class)
+    @ResponseBody
+    public CommonResp<Object> exceptionHandler(BindException e) {
+        CommonResp<Object> commonResp = new CommonResp<>();
+        log.error("校验异常：{}", e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+        commonResp.setSuccess(false);
+        commonResp.setMessage(e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+        return commonResp;
+    }
+(14)雪花算法生成LogId
+    首先在AOP环绕通知前自定义日志追踪键值对
+    //MDC.put( "LOG_ID", String.valueOf(System.currentTimeMillis()));
+    MDC.put( "LOG_ID", IdUtil.getSnowflakeNextIdStr());
 
 
 
